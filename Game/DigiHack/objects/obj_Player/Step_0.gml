@@ -10,32 +10,48 @@ yspd = (move_down - move_up) * move_spd;
 x += xspd;
 y += yspd;
 
-mask_index = sprite[UP];
-if yspd == 0 {
+if place_meeting(x + xspd, y, obj_wall) == true {
+    xspd = 0;
+}
+
+if place_meeting(x, y+yspd, obj_wall) == true {
+    yspd = 0
+}
+
+
+
+if xspd != 0 || yspd != 0 {
     if (xspd > 0) {
-        face = RIGHT;
-    }else if (xspd < 0) {
-        face = LEFT;
+        face = "right";
     }
-}
-if (xspd > 0 && face == LEFT) {
-    face = RIGHT;
-}
-if (xspd < 0 && face == RIGHT) {
-    face = LEFT;
-}
-
-if (xspd == 0) {
+    if (xspd < 0) {
+        face = "left";
+    }
     if (yspd > 0) {
-        face = DOWN;
-    } else if (yspd < 0) {
-        face = UP;
+        face = "down";
     }
-}   
-sprite_index = sprite[face]; 
-
-if xspd == 0 && yspd == 0 {
-    image_index = 0;
+    if (yspd < 0) {
+        face = "up";
+    }
 }
+
+switch (face) {
+    case "right":
+        sprite_index = (xspd != 0 || yspd != 0) ? Player_sprite_right_walk : Player_sprite_right_walk_idle;
+        break;
+    case "left":
+        sprite_index = (xspd != 0 || yspd != 0) ? Player_sprite_left_walk : Player_sprite_left_idle;
+        break;
+    case "up":
+        sprite_index = (xspd != 0 || yspd != 0) ? Player_sprite_back_walk : Player_sprite_back_idle;
+        break;
+    case "down":
+        sprite_index = (xspd != 0 || yspd != 0) ? Player_sprite_walk_up : Player_sprite_idle_up;
+        break;
+}
+
+
+
+
 
 
