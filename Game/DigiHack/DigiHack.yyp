@@ -44,6 +44,7 @@
     {"id":{"name":"obj_button_parent","path":"objects/obj_button_parent/obj_button_parent.yy",},},
     {"id":{"name":"obj_camera","path":"objects/obj_camera/obj_camera.yy",},},
     {"id":{"name":"obj_chatbot","path":"objects/obj_chatbot/obj_chatbot.yy",},},
+    {"id":{"name":"obj_Controller","path":"objects/obj_Controller/obj_Controller.yy",},},
     {"id":{"name":"obj_gate","path":"objects/obj_gate/obj_gate.yy",},},
     {"id":{"name":"obj_guard_3","path":"objects/obj_guard_3/obj_guard_3.yy",},},
     {"id":{"name":"obj_guard_battle_mode","path":"objects/obj_guard_battle_mode/obj_guard_battle_mode.yy",},},

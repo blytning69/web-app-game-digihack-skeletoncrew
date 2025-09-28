@@ -12,6 +12,7 @@ function scr_game_text(_text_id){
         case "guard_1-correct" :
             scr_text("NICE!");
             scr_text("You may Pass!");
+			global.points += 1;
             with (obj_gate) {
                 quest_done = true;
             }
@@ -36,6 +37,7 @@ function scr_game_text(_text_id){
             scr_text("Wow!!!!");
             scr_text("You're so smart!");
             scr_text("You may pass the gate!");
+			global.points += 5;
             with (obj_gate) {
                 quest_done = true;
             }
@@ -65,6 +67,7 @@ function scr_game_text(_text_id){
             scr_text("WOWWWWW!");
             scr_text("YOU ARE CORRECT");
             scr_text("congratulations!, now you may pass this final gate!");
+			global.points += 10;
             with(obj_gate) {
                 quest_done = true;
             }

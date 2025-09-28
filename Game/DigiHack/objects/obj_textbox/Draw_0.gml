@@ -129,4 +129,12 @@ if (draw_char == text_length[page] && page == page_number - 1 && option_number >
         //the option text
         draw_text(txtbx_x + 16, txtbx_y - op_space*option_number + op_space*op + 2, option[op]);
     }
+	
+	//reset draw
+	draw_set_alpha(1);
+	draw_set_color(c_white);
+	draw_set_halign(fa_left);
+	draw_set_valign(fa_top);
+	draw_set_font(-1);
+
 }
