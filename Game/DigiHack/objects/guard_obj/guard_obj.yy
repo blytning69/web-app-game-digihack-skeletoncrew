@@ -34,8 +34,8 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"guard_spr",
-    "path":"sprites/guard_spr/guard_spr.yy",
+    "name":"guard_1_spr",
+    "path":"sprites/guard_1_spr/guard_1_spr.yy",
   },
   "spriteMaskId":null,
   "visible":true,

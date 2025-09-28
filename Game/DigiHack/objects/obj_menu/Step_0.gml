@@ -19,5 +19,5 @@ if image_index = 1 and accept {
 }
 
 if image_index = 0 and accept {
-    room_goto(rm_maze);
+    room_goto(rm_maze_easy);
 }
