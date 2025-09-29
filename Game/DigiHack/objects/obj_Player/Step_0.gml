@@ -1,6 +1,8 @@
-// Stop all logic if paused
-if (obj_pause.pause) {
-    // freeze animation frame when paused
+// ============================
+// Stop all logic if paused or in dialogue
+// ============================
+if (obj_pause.pause || global.in_dialogue) {
+    // freeze animation frame when paused or in dialogue
     image_speed = 0;
     exit; 
 } else {

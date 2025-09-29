@@ -90,6 +90,7 @@
     {"id":{"name":"spr_bgparalaxwin","path":"sprites/spr_bgparalaxwin/spr_bgparalaxwin.yy",},},
     {"id":{"name":"spr_button_play","path":"sprites/spr_button_play/spr_button_play.yy",},},
     {"id":{"name":"spr_chatbot","path":"sprites/spr_chatbot/spr_chatbot.yy",},},
+    {"id":{"name":"spr_help_page","path":"sprites/spr_help_page/spr_help_page.yy",},},
     {"id":{"name":"spr_menu","path":"sprites/spr_menu/spr_menu.yy",},},
     {"id":{"name":"spr_pause","path":"sprites/spr_pause/spr_pause.yy",},},
     {"id":{"name":"spr_teleport_animation","path":"sprites/spr_teleport_animation/spr_teleport_animation.yy",},},
