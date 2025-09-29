@@ -1,10 +1,15 @@
 // Toggle pause with ESC
 if (keyboard_check_pressed(vk_escape)) {
-    pause = !pause;
-    if (pause) {
-        menu_target_alpha = 1; // fade in
+    // if help is open, ESC closes it instead of pausing
+    if (global.show_help) {
+        global.show_help = false;
     } else {
-        menu_target_alpha = 0; // fade out
+        pause = !pause;
+        if (pause) {
+            menu_target_alpha = 1;
+        } else {
+            menu_target_alpha = 0;
+        }
     }
 }
 
@@ -14,15 +19,14 @@ if (menu_alpha < menu_target_alpha) {
 } else if (menu_alpha > menu_target_alpha) {
     menu_alpha = max(menu_alpha - menu_fade_speed, menu_target_alpha);
 
-    // ✅ If we were fading out to menu, change room once fade done
     if (menu_alpha == 0 && pause_action == "menu") {
         room_goto(Main_Menu);
-        pause_action = ""; // reset
+        pause_action = "";
     }
 }
 
 // While paused
-if (pause) {
+if (pause && !global.show_help) {  // only show menu if not inside help
     var cx = display_get_gui_width()/2;
     var cy = display_get_gui_height()/2 - 40;
     var spr_w = sprite_get_width(spr_pause);
@@ -32,37 +36,35 @@ if (pause) {
     var my = device_mouse_y_to_gui(0);
 
     // Keyboard nav
-    if (keyboard_check_pressed(vk_up))  image_index = 0;
-    if (keyboard_check_pressed(vk_down)) image_index = 1;
+    if (keyboard_check_pressed(vk_up))   image_index = max(0, image_index - 1);
+    if (keyboard_check_pressed(vk_down)) image_index = min(3, image_index + 1);
 
-    // Mouse hover
-    if (point_in_rectangle(mx, my, cx - spr_w/2, cy - spr_h/2, cx + spr_w/2, cy)) {
-        image_index = 0; // Resume
-    }
-    if (point_in_rectangle(mx, my, cx - spr_w/2, cy, cx + spr_w/2, cy + spr_h/2)) {
-        image_index = 1; // Menu
-    }
+    // Mouse hover (split sprite vertically)
+    var zone_h = spr_h / 4;
+    if (point_in_rectangle(mx, my, cx - spr_w/2, cy - spr_h/2, cx + spr_w/2, cy - spr_h/2 + zone_h)) image_index = 0;
+    if (point_in_rectangle(mx, my, cx - spr_w/2, cy - spr_h/2 + zone_h, cx + spr_w/2, cy - spr_h/2 + zone_h*2)) image_index = 1;
+    if (point_in_rectangle(mx, my, cx - spr_w/2, cy - spr_h/2 + zone_h*2, cx + spr_w/2, cy - spr_h/2 + zone_h*3)) image_index = 2;
+    if (point_in_rectangle(mx, my, cx - spr_w/2, cy - spr_h/2 + zone_h*3, cx + spr_w/2, cy - spr_h/2 + zone_h*4)) image_index = 3;
 
-    // Confirm (Enter or Left Click)
+    // Confirm
     if (keyboard_check_pressed(vk_enter) || mouse_check_button_pressed(mb_left)) {
-        if (image_index == 0) {
+        if (image_index == 0) { // Resume
             pause = false;
-            menu_target_alpha = 0;     // fade out
-            pause_action = "resume";   // flag
+            menu_target_alpha = 0;
+            pause_action = "resume";
         }
-        else if (image_index == 1) {
-            menu_target_alpha = 0;     // fade out
-            pause_action = "menu";     // flag, room_goto happens after fade
+        else if (image_index == 1) { // Main Menu
+            menu_target_alpha = 0;
+            pause_action = "menu";
         }
-    }
-
-    // Redeem button click
-    var bx = display_get_gui_width()/2;
-    var by = cy + spr_h/2 + 40;
-    if (global.points > 0 && mouse_check_button_pressed(mb_left)) {
-        if (point_in_rectangle(mx, my, bx-100, by-20, bx+100, by+20)) {
-            global.currency += global.points;
-            global.points = 0;
+        else if (image_index == 2) { // Help
+            global.show_help = true; 
+        }
+        else if (image_index == 3) { // Redeem
+            if (global.points > 0) {
+                global.currency += global.points;
+                global.points = 0;
+            }
         }
     }
 }

@@ -10,3 +10,4 @@ menu_fade_speed = 0.1;        // How fast fade happens
 n = 0;                        // Frame index for pause sprite animation
 spr_resume = spr_pause;       // Sprite for pause menu (fallback: same as spr_pause)
 max_frames = sprite_get_number(spr_pause) - 1; // Frames in pause sprite
+pause_action = "";
