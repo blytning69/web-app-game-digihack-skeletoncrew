@@ -31,23 +31,22 @@ if (pause && !global.show_help) {  // only show menu if not inside help
     var cy = display_get_gui_height()/2 - 40;
     var spr_w = sprite_get_width(spr_pause);
     var spr_h = sprite_get_height(spr_pause);
+    
+    var _up = keyboard_check_pressed(ord("W"));
+    var _down = keyboard_check_pressed(ord("S"));
+    
+    if _up {
+        image_index--;
+    }
+    
+    if _down {
+        image_index++;
+    }
+    
 
-    var mx = device_mouse_x_to_gui(0);
-    var my = device_mouse_y_to_gui(0);
-
-    // Keyboard nav
-    if (keyboard_check_pressed(vk_up))   image_index = max(0, image_index - 1);
-    if (keyboard_check_pressed(vk_down)) image_index = min(3, image_index + 1);
-
-    // Mouse hover (split sprite vertically)
-    var zone_h = spr_h / 4;
-    if (point_in_rectangle(mx, my, cx - spr_w/2, cy - spr_h/2, cx + spr_w/2, cy - spr_h/2 + zone_h)) image_index = 0;
-    if (point_in_rectangle(mx, my, cx - spr_w/2, cy - spr_h/2 + zone_h, cx + spr_w/2, cy - spr_h/2 + zone_h*2)) image_index = 1;
-    if (point_in_rectangle(mx, my, cx - spr_w/2, cy - spr_h/2 + zone_h*2, cx + spr_w/2, cy - spr_h/2 + zone_h*3)) image_index = 2;
-    if (point_in_rectangle(mx, my, cx - spr_w/2, cy - spr_h/2 + zone_h*3, cx + spr_w/2, cy - spr_h/2 + zone_h*4)) image_index = 3;
-
+ 
     // Confirm
-    if (keyboard_check_pressed(vk_enter) || mouse_check_button_pressed(mb_left)) {
+    if (keyboard_check_pressed(ord("E"))) {
         if (image_index == 0) { // Resume
             pause = false;
             menu_target_alpha = 0;

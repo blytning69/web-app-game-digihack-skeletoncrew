@@ -1,7 +1,7 @@
 var up, down, accept, back;
 
-up = keyboard_check_pressed(vk_up);
-down = keyboard_check_pressed(vk_down);
+up = keyboard_check_pressed(ord("W"));
+down = keyboard_check_pressed(ord("S"));
 accept = keyboard_check_pressed(ord("E"));
 back = keyboard_check_pressed(ord("B"));
 
