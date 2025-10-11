@@ -28,8 +28,8 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"spr_menu",
-    "path":"sprites/spr_menu/spr_menu.yy",
+    "name":"spr_MainMenuNew",
+    "path":"sprites/spr_MainMenuNew/spr_MainMenuNew.yy",
   },
   "spriteMaskId":null,
   "visible":true,
