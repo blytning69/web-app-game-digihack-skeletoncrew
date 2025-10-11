@@ -14,10 +14,18 @@ if down {
     image_index++;
 }
 
-if image_index = 1 and accept {
+if image_index = 3 and accept {
     game_end();
+}
+
+if image_index = 1 and accept {
+    room_goto(room_classroom);
 }
 
 if image_index = 0 and accept {
     room_goto(rm_maze_easy);
+}
+
+if image_index = 2 and accept {
+    game_end()
 }
