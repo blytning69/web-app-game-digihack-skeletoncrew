@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine, Column, String, Integer, Float, ForeignKey, DateTime
+from sqlalchemy import create_engine, Column, String, Integer, ForeignKey, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 import requests
@@ -17,7 +17,8 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 POINT_CONVERSION_RATE = 1000 / 10000  # Rp10,000 = 1000 points
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# ✅ Use Argon2 instead of bcrypt
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # ---------------- DATABASE ----------------
@@ -26,7 +27,6 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 Base = declarative_base()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
 class Player(Base):
     __tablename__ = "players"
     username = Column(String, primary_key=True, index=True)
@@ -34,9 +34,7 @@ class Player(Base):
     points = Column(Integer, default=0)
     status = Column(String, default="idle")
     payment_method = Column(String, nullable=True)
-
     transactions = relationship("Transaction", back_populates="player_obj")
-
 
 class Transaction(Base):
     __tablename__ = "transactions"
@@ -48,9 +46,7 @@ class Transaction(Base):
     amount = Column(Integer)
     status = Column(String)
     timestamp = Column(DateTime, default=datetime.utcnow)
-
     player_obj = relationship("Player", back_populates="transactions")
-
 
 Base.metadata.create_all(bind=engine)
 
@@ -62,21 +58,17 @@ def get_db():
     finally:
         db.close()
 
-
 def verify_password(plain, hashed):
     return pwd_context.verify(plain, hashed)
 
-
 def get_password_hash(password):
     return pwd_context.hash(password)
-
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
 
 def get_current_player(token: str = Depends(oauth2_scheme), db: SessionLocal = Depends(get_db)):
     try:
@@ -90,13 +82,9 @@ def get_current_player(token: str = Depends(oauth2_scheme), db: SessionLocal = D
         raise HTTPException(401, "Invalid token")
 
 # ---------------- ROUTES ----------------
-
 @app.get("/")
 def home():
-    """Health check endpoint"""
     return {"status": "ok", "service": "mathmaze-backend"}
-
-# ----------- AUTH -----------
 
 @app.post("/register")
 def register(username: str, password: str, db: SessionLocal = Depends(get_db)):
@@ -107,7 +95,6 @@ def register(username: str, password: str, db: SessionLocal = Depends(get_db)):
     db.commit()
     return {"msg": f"Player {username} registered successfully"}
 
-
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: SessionLocal = Depends(get_db)):
     player = db.query(Player).filter(Player.username == form_data.username).first()
@@ -117,8 +104,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: SessionLocal = D
                                 timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"access_token": token, "token_type": "bearer"}
 
-# ----------- PAYMENT LINK -----------
-
 @app.post("/link_payment")
 def link_payment(method: str, player: Player = Depends(get_current_player), db: SessionLocal = Depends(get_db)):
     if method not in ["gopay", "dana", "card"]:
@@ -126,8 +111,6 @@ def link_payment(method: str, player: Player = Depends(get_current_player), db: 
     player.payment_method = method
     db.commit()
     return {"msg": f"{method.capitalize()} linked successfully"}
-
-# ----------- TOP-UP -----------
 
 @app.post("/payment/topup")
 def topup_points(amount: int, method: str, player: Player = Depends(get_current_player), db: SessionLocal = Depends(get_db)):
@@ -184,8 +167,6 @@ def topup_points(amount: int, method: str, player: Player = Depends(get_current_
         return {"msg": "Card payment created",
                 "invoice_url": invoice["invoice_url"], "reference_id": ref_id}
 
-# ----------- REDEEM -----------
-
 @app.post("/redeem")
 def redeem_points(player: Player = Depends(get_current_player), db: SessionLocal = Depends(get_db)):
     if player.points < 1000:
@@ -218,8 +199,6 @@ def redeem_points(player: Player = Depends(get_current_player), db: SessionLocal
     db.commit()
     return {"redeem": "ok", "reference_id": ref_id, "xendit_response": response.json()}
 
-# ----------- TRANSACTIONS -----------
-
 @app.get("/transactions")
 def list_transactions(player: Player = Depends(get_current_player), db: SessionLocal = Depends(get_db)):
     txs = db.query(Transaction).filter(Transaction.player == player.username)\
@@ -234,7 +213,6 @@ def list_transactions(player: Player = Depends(get_current_player), db: SessionL
             "timestamp": t.timestamp.isoformat(),
         } for t in txs
     ]}
-
 
 @app.get("/transactions/{reference_id}")
 def transaction_detail(reference_id: str, player: Player = Depends(get_current_player), db: SessionLocal = Depends(get_db)):
@@ -252,14 +230,11 @@ def transaction_detail(reference_id: str, player: Player = Depends(get_current_p
         "timestamp": tx.timestamp.isoformat(),
     }
 
-# ----------- WEBHOOK -----------
-
 @app.post("/webhook/xendit")
 async def webhook_xendit(request: Request, db: SessionLocal = Depends(get_db)):
     payload = await request.json()
     print("Webhook:", payload)
 
-    # eWallet topup webhook
     if "data" in payload:
         data = payload["data"]
         ref_id = data.get("reference_id") or data.get("external_id")
@@ -268,7 +243,6 @@ async def webhook_xendit(request: Request, db: SessionLocal = Depends(get_db)):
         if tx:
             tx.status = status
             db.commit()
-
             if tx.type == "topup" and status == "SUCCEEDED":
                 player = db.query(Player).filter(Player.username == tx.player).first()
                 if player:
@@ -276,8 +250,6 @@ async def webhook_xendit(request: Request, db: SessionLocal = Depends(get_db)):
                     player.points += added_points
                     db.commit()
                     print(f"{player.username} top-up success: +{added_points} points")
-
-    # Disbursement webhook (redeem)
     elif payload.get("external_id", "").startswith("redeem-"):
         ref_id = payload["external_id"]
         status = payload.get("status", "UNKNOWN")
