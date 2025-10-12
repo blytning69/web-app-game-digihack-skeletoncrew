@@ -54,7 +54,6 @@ class Transaction(Base):
 
 Base.metadata.create_all(bind=engine)
 
-
 # ---------------- HELPERS ----------------
 def get_db():
     db = SessionLocal()
@@ -90,14 +89,19 @@ def get_current_player(token: str = Depends(oauth2_scheme), db: SessionLocal = D
     except JWTError:
         raise HTTPException(401, "Invalid token")
 
-
 # ---------------- ROUTES ----------------
+
+@app.get("/")
+def home():
+    """Health check endpoint"""
+    return {"status": "ok", "service": "mathmaze-backend"}
+
+# ----------- AUTH -----------
 
 @app.post("/register")
 def register(username: str, password: str, db: SessionLocal = Depends(get_db)):
     if db.query(Player).filter(Player.username == username).first():
         raise HTTPException(400, "User already exists")
-
     player = Player(username=username, password_hash=get_password_hash(password))
     db.add(player)
     db.commit()
@@ -109,11 +113,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: SessionLocal = D
     player = db.query(Player).filter(Player.username == form_data.username).first()
     if not player or not verify_password(form_data.password, player.password_hash):
         raise HTTPException(401, "Invalid username or password")
-
     token = create_access_token({"sub": player.username},
                                 timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"access_token": token, "token_type": "bearer"}
 
+# ----------- PAYMENT LINK -----------
 
 @app.post("/link_payment")
 def link_payment(method: str, player: Player = Depends(get_current_player), db: SessionLocal = Depends(get_db)):
@@ -123,6 +127,7 @@ def link_payment(method: str, player: Player = Depends(get_current_player), db: 
     db.commit()
     return {"msg": f"{method.capitalize()} linked successfully"}
 
+# ----------- TOP-UP -----------
 
 @app.post("/payment/topup")
 def topup_points(amount: int, method: str, player: Player = Depends(get_current_player), db: SessionLocal = Depends(get_db)):
@@ -131,7 +136,6 @@ def topup_points(amount: int, method: str, player: Player = Depends(get_current_
         raise HTTPException(400, "Invalid method")
 
     ref_id = f"topup-{player.username}-{method}-{int(datetime.now().timestamp())}"
-
     tx = Transaction(reference_id=ref_id, player=player.username, type="topup",
                      method=method, amount=amount, status="PENDING")
     db.add(tx)
@@ -180,6 +184,7 @@ def topup_points(amount: int, method: str, player: Player = Depends(get_current_
         return {"msg": "Card payment created",
                 "invoice_url": invoice["invoice_url"], "reference_id": ref_id}
 
+# ----------- REDEEM -----------
 
 @app.post("/redeem")
 def redeem_points(player: Player = Depends(get_current_player), db: SessionLocal = Depends(get_db)):
@@ -190,7 +195,6 @@ def redeem_points(player: Player = Depends(get_current_player), db: SessionLocal
 
     amount = int(player.points * (10000 / 1000))
     ref_id = f"redeem-{player.username}-{int(datetime.now().timestamp())}"
-
     tx = Transaction(reference_id=ref_id, player=player.username, type="redeem",
                      method=player.payment_method, amount=amount, status="PROCESSING")
     db.add(tx)
@@ -214,10 +218,12 @@ def redeem_points(player: Player = Depends(get_current_player), db: SessionLocal
     db.commit()
     return {"redeem": "ok", "reference_id": ref_id, "xendit_response": response.json()}
 
+# ----------- TRANSACTIONS -----------
 
 @app.get("/transactions")
 def list_transactions(player: Player = Depends(get_current_player), db: SessionLocal = Depends(get_db)):
-    txs = db.query(Transaction).filter(Transaction.player == player.username).order_by(Transaction.timestamp.desc()).all()
+    txs = db.query(Transaction).filter(Transaction.player == player.username)\
+        .order_by(Transaction.timestamp.desc()).all()
     return {"player": player.username, "transactions": [
         {
             "reference_id": t.reference_id,
@@ -246,17 +252,18 @@ def transaction_detail(reference_id: str, player: Player = Depends(get_current_p
         "timestamp": tx.timestamp.isoformat(),
     }
 
+# ----------- WEBHOOK -----------
 
 @app.post("/webhook/xendit")
 async def webhook_xendit(request: Request, db: SessionLocal = Depends(get_db)):
     payload = await request.json()
     print("Webhook:", payload)
 
+    # eWallet topup webhook
     if "data" in payload:
         data = payload["data"]
         ref_id = data.get("reference_id") or data.get("external_id")
         status = data.get("status", "").upper()
-
         tx = db.query(Transaction).filter(Transaction.reference_id == ref_id).first()
         if tx:
             tx.status = status
@@ -268,10 +275,9 @@ async def webhook_xendit(request: Request, db: SessionLocal = Depends(get_db)):
                     added_points = int(tx.amount * POINT_CONVERSION_RATE)
                     player.points += added_points
                     db.commit()
-                    print(f" {player.username} top-up success: +{added_points} points")
+                    print(f"{player.username} top-up success: +{added_points} points")
 
-        print(f"Updated {ref_id}: {status}")
-
+    # Disbursement webhook (redeem)
     elif payload.get("external_id", "").startswith("redeem-"):
         ref_id = payload["external_id"]
         status = payload.get("status", "UNKNOWN")
@@ -284,93 +290,3 @@ async def webhook_xendit(request: Request, db: SessionLocal = Depends(get_db)):
                 player.status = status
                 db.commit()
     return {"ok": True}
-
-from fastapi import FastAPI, HTTPException, Request
-import requests
-import os
-
-app = FastAPI()
-
-# Xendit secret key (set in Railway environment variables)
-XENDIT_KEY = os.getenv("XENDIT_SANDBOX_KEY")
-
-# Mock player data (for demo)
-players = {
-    "moreno": {"points": 1500, "status": "idle"}
-}
-
-POINT_VALUE = 10000 / 1000  # 1000 points = Rp10,000
-
-
-@app.get("/")
-def home():
-    return {"status": "ok", "service": "railway-backend"}
-
-
-@app.post("/redeem/{player}")
-def redeem_points(player: str):
-    """Create a Xendit disbursement for the given player"""
-    player_data = players.get(player)
-    if not player_data:
-        raise HTTPException(404, "Player not found")
-
-    if player_data["points"] < 1000:
-        raise HTTPException(400, "Not enough points to redeem")
-
-    amount = int(player_data["points"] * POINT_VALUE)
-
-    data = {
-        "external_id": f"redeem-{player}",
-        "amount": amount,
-        "bank_code": "BRI",
-        "account_holder_name": player,
-        "account_number": "1234567890",
-        "description": f"Redeem points for {player}",
-    }
-
-    response = requests.post(
-        "https://api.xendit.co/disbursements",
-        json=data,
-        auth=(XENDIT_KEY, "")
-    )
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=500, detail=response.text)
-
-    player_data["status"] = "processing"
-    player_data["points"] = 0
-
-    return {"redeem": "ok", "xendit_response": response.json()}
-
-
-@app.post("/webhook/xendit")
-async def webhook_xendit(request: Request):
-    """Receive status updates from Xendit"""
-    try:
-        payload = await request.json()
-        print("Webhook payload:", payload)
-
-        external_id = payload.get("external_id", "")
-        status = payload.get("status", "")
-
-        # Match disbursement to player
-        if external_id.startswith("redeem-"):
-            player_name = external_id.replace("redeem-", "")
-            if player_name in players:
-                players[player_name]["status"] = status
-                print(f"Updated {player_name} status -> {status}")
-
-        return {"ok": True}
-
-    except Exception as e:
-        print("Webhook error:", e)
-        raise HTTPException(400, f"Invalid payload: {e}")
-
-
-@app.get("/player/{player}")
-def get_player_status(player: str):
-    """Check current status and points for a player"""
-    player_data = players.get(player)
-    if not player_data:
-        raise HTTPException(404, "Player not found")
-    return player_data
