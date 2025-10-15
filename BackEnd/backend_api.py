@@ -23,7 +23,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # ---------------- DATABASE ----------------
 DATABASE_URL = "postgresql://game_db_zt66_user:A485vrVtwAjZQKn5ncQWDSbasn74VNRB@dpg-d3mfq015pdvs73b7v6f0-a/game_db_zt66"
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+
+if DATABASE_URL and DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
 Base = declarative_base()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
