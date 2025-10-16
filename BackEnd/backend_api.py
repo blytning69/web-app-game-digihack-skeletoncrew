@@ -24,6 +24,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 # ---------------- DATABASE ----------------
 DATABASE_URL = "postgresql://game_db_zt66_user:A485vrVtwAjZQKn5ncQWDSbasn74VNRB@dpg-d3mfq015pdvs73b7v6f0-a/game_db_zt66"
 
+
+# Automatically pick correct config for SQLite (local) or PostgreSQL (Render)
 if DATABASE_URL and DATABASE_URL.startswith("sqlite"):
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
@@ -160,8 +162,8 @@ def topup_points(amount: int, method: str, player: Player = Depends(get_current_
             "description": f"Top-up for {player.username}",
             "invoice_duration": 86400,
             "currency": "IDR",
-            "success_redirect_url": "https://yourgame.com/topup-success",
-            "failure_redirect_url": "https://yourgame.com/topup-failed",
+            "success_redirect_url": "https://web-app-game-digihack-skeletoncrew.onrender.com/topup-success",
+            "failure_redirect_url": "https://web-app-game-digihack-skeletoncrew.onrender.com/topup-failed",
         }
         response = requests.post("https://api.xendit.co/v2/invoices",
                                  json=data, auth=(XENDIT_KEY, ""))
@@ -266,3 +268,12 @@ async def webhook_xendit(request: Request, db: SessionLocal = Depends(get_db)):
                 player.status = status
                 db.commit()
     return {"ok": True}
+
+
+@app.get("/topup-success")
+def topup_success():
+    return {"status": "ok", "message": "Top-up succeeded! You can safely close this window."}
+
+@app.get("/topup-failed")
+def topup_failed():
+    return {"status": "failed", "message": "Top-up failed or was cancelled."}
