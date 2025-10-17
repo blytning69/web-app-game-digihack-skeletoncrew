@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"scr_redeem",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"scr_redeem",
+  "parent":{
+    "name":"Scripts",
+    "path":"folders/Notes/Scripts.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

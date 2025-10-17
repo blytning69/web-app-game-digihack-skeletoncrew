@@ -4,7 +4,7 @@ if (!instance_exists(obj_Player)) exit;
 // --- toggle zoom sekali ---
 if (place_meeting(obj_Player.x, obj_Player.y, obj_zoom_trigger)) {
     if (can_toggle) {               // hanya pertama kali nabrak
-        zoomed_out = !zoomed_out;   // ubah state
+        zoomed_out = true;   // ubah state
         can_toggle = false;         // kunci biar gak spam
     }
 } else {

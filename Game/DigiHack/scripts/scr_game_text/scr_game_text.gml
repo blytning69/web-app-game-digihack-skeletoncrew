@@ -102,5 +102,12 @@ function scr_game_text(_text_id) {
             scr_text("Thank you for using my service!");
             global.in_dialogue = false; // ✅ end dialogue
         break;
+        
+        case "teacher":
+            global.in_dialogue = true;
+            scr_text("Hello!");
+            scr_text("I'm The Teacher!");
+            global.in_dialogue = false;
+        break;
     }
 }
