@@ -17,19 +17,22 @@ if (!typing_mode) {
 
     if (accept) {
         switch (image_index) {
-            case 0: 
+            case 0:
+                room_goto(Main_Menu);
+                break;
+            case 1: 
                 typing_mode = true;
                 active_field = 0;
                 keyboard_string = username; 
                 break;
 
-            case 1: 
+            case 2: 
                 typing_mode = true;
                 active_field = 1;
                 keyboard_string = password;
                 break;
 
-            case 2: 
+            case 3: 
                 show_debug_message("Sign In pressed!");
                 show_debug_message("Username: " + username);
                 show_debug_message("Password: " + password);
@@ -37,7 +40,7 @@ if (!typing_mode) {
                 sign_in = true;
                 break;
 
-            case 3: 
+            case 4: 
                 show_debug_message("Sign Up pressed!");
                 var endpoint = "register?username=" + username + "&password=" + password;
                 backend_request(endpoint, "POST", "", false);

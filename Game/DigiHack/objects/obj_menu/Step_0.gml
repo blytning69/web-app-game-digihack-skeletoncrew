@@ -29,7 +29,7 @@ if image_index == 2 && accept{
 }
 
 if image_index == 3 && accept{
-    game_end();
+    room_goto(rm_login);
 }
 
 if image_index == 4 && accept{

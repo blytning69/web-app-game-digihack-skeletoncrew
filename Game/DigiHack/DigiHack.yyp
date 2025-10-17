@@ -153,9 +153,9 @@
   "resourceType":"GMProject",
   "resourceVersion":"2.0",
   "RoomOrderNodes":[
+    {"roomId":{"name":"Main_Menu","path":"rooms/Main_Menu/Main_Menu.yy",},},
     {"roomId":{"name":"rm_register","path":"rooms/rm_register/rm_register.yy",},},
     {"roomId":{"name":"rm_login","path":"rooms/rm_login/rm_login.yy",},},
-    {"roomId":{"name":"Main_Menu","path":"rooms/Main_Menu/Main_Menu.yy",},},
     {"roomId":{"name":"rm_input_text","path":"rooms/rm_input_text/rm_input_text.yy",},},
     {"roomId":{"name":"rm_maze_easy","path":"rooms/rm_maze_easy/rm_maze_easy.yy",},},
     {"roomId":{"name":"rm_maze_medium","path":"rooms/rm_maze_medium/rm_maze_medium.yy",},},
