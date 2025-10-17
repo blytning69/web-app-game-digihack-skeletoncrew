@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request, Depends, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -100,8 +100,13 @@ def get_current_player(token: str = Depends(oauth2_scheme), db: SessionLocal = D
 def home():
     return {"status": "ok", "service": "mathmaze-backend"}
 
+# ✅ FIXED: register now accepts form data (GameMaker & curl compatible)
 @app.post("/register")
-def register(username: str, password: str, db: SessionLocal = Depends(get_db)):
+def register(
+    username: str = Form(...),
+    password: str = Form(...),
+    db: SessionLocal = Depends(get_db)
+):
     if db.query(Player).filter(Player.username == username).first():
         raise HTTPException(400, "User already exists")
     player = Player(username=username, password_hash=get_password_hash(password))
@@ -109,6 +114,7 @@ def register(username: str, password: str, db: SessionLocal = Depends(get_db)):
     db.commit()
     return {"msg": f"Player {username} registered successfully"}
 
+# ✅ already accepts x-www-form-urlencoded
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: SessionLocal = Depends(get_db)):
     player = db.query(Player).filter(Player.username == form_data.username).first()
@@ -143,7 +149,6 @@ def redeem_points(
     if not account_number or not account_holder_name:
         raise HTTPException(400, "Nomor akun dan nama pemilik wajib diisi.")
 
-    # Default bank_code sesuai payment_method jika tidak dikirim
     if not bank_code:
         bank_code = "BRI" if player.payment_method.lower() == "card" else "ID_DANA"
 
@@ -154,7 +159,6 @@ def redeem_points(
     rupiah_amount = int(redeem_points * (10000 / 1000))
     ref_id = f"redeem-{player.username}-{int(datetime.now().timestamp())}"
 
-    # Hash data sensitif sebelum disimpan
     player.hashed_account_number = hash_sensitive_data(account_number)
     player.hashed_account_name = hash_sensitive_data(account_holder_name)
     player.hashed_bank_code = hash_sensitive_data(bank_code)
