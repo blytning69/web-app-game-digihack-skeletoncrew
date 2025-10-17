@@ -2,7 +2,7 @@
 
 if (!typing_mode) {
 
-    // Reset input text (only when not typing)
+    
     keyboard_string = "";
 
     // Movement & control keys
@@ -18,6 +18,14 @@ if (!typing_mode) {
     // Wrap around menu indexes (0–4)
     if (image_index < 0) image_index = 4;
     if (image_index > 4) image_index = 0;
+
+    // -------------------------------
+    // Jika sudah login, langsung ke rm_redeem
+    // -------------------------------
+    if (global.sign_in && room != rm_redeem) {
+    room_goto(rm_redeem);
+    exit;
+}
 
     // -------------------------------
     // When "Accept" (E) is pressed
@@ -50,9 +58,14 @@ if (!typing_mode) {
                 show_debug_message("Username: " + username);
                 show_debug_message("Password: " + password);
 
-                // Call script directly (no function_exists)
+                // Panggil fungsi login
                 login_user(username, password);
-                sign_in = true;
+
+                // Simpan status login
+                global.sign_in = true;
+
+                // Pindah ke halaman berikut
+                room_goto(rm_redeem);
                 break;
 
             case 4:
@@ -61,21 +74,17 @@ if (!typing_mode) {
                 show_debug_message("Username: " + username);
                 show_debug_message("Password: " + password);
 
-                // Call signup script directly
-                signup_user(username, password);
-				room_goto(Main_Menu);
+                register_user(username, password);
+                room_goto(Main_Menu);
                 break;
         }
     }
 
 } else {
-    // -------------------------------
-    // Typing mode active
-    // -------------------------------
     if (active_field == 0) username = keyboard_string;
     if (active_field == 1) password = keyboard_string;
 
-    // Press Enter → exit typing mode
+    
     if (keyboard_check_pressed(vk_enter)) {
         typing_mode   = false;
         active_field  = -1;

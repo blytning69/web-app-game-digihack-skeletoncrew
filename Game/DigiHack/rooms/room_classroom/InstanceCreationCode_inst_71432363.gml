@@ -1,1 +1,1 @@
-text_id = "teacher";
+text_id = "chatbot";

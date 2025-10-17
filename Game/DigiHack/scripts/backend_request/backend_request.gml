@@ -16,7 +16,6 @@ function __add_auth__(headers_map) {
 }
 
 /// @func get_transactions()
-/// @desc GET /transactions (auth required). Stores req id in global.req_tx
 function get_transactions() {
     __ensure_base_url__();
 
@@ -31,7 +30,6 @@ function get_transactions() {
 }
 
 /// @func link_payment(_method)
-/// @desc POST /link_payment?method=gopay|card (auth required). Stores req id in global.req_link
 function link_payment(_method) {
     __ensure_base_url__();
 
@@ -46,7 +44,6 @@ function link_payment(_method) {
 }
 
 /// @func redeem_points(_amount, _account_number, _account_holder_name, _bank_code)
-/// @desc POST /redeem with JSON body (auth required). Stores req id in global.req_redeem
 function redeem_points(_amount, _account_number, _account_holder_name, _bank_code) {
     __ensure_base_url__();
 
@@ -55,7 +52,6 @@ function redeem_points(_amount, _account_number, _account_holder_name, _bank_cod
     ds_map_add(headers, "Content-Type", "application/json");
     __add_auth__(headers);
 
-    // Build JSON using ds_map + json_encode
     var body_map = ds_map_create();
     if (!is_undefined(_amount))              ds_map_add(body_map, "amount", real(_amount));
     if (!is_undefined(_account_number))      ds_map_add(body_map, "account_number", string(_account_number));
@@ -64,9 +60,17 @@ function redeem_points(_amount, _account_number, _account_holder_name, _bank_cod
 
     var body_json = json_encode(body_map);
 
-    global.req_redeem = http_request(url, "POST", headers, body_json);
+    var buf = buffer_create(string_byte_length(body_json) + 1, buffer_fixed, 1);
+    buffer_write(buf, buffer_text, body_json);
+    buffer_seek(buf, buffer_seek_start, 0);
+
+    // Versi baru: (url, method, data-buffer, headers)
+    global.req_redeem = http_request(url, "POST", buf, headers);
     show_debug_message("[HTTP] POST /redeem -> req_id: " + string(global.req_redeem) + " body=" + body_json);
 
+    buffer_delete(buf);
     ds_map_destroy(body_map);
     ds_map_destroy(headers);
 }
+
+
