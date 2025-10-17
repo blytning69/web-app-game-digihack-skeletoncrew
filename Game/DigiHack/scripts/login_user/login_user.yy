@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"scr_redeem",
+  "%Name":"login_user",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"scr_redeem",
+  "name":"login_user",
   "parent":{
     "name":"Scripts",
     "path":"folders/Notes/Scripts.yy",

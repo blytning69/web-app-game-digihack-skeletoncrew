@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"signup_user",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"signup_user",
+  "parent":{
+    "name":"Scripts",
+    "path":"folders/Notes/Scripts.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
